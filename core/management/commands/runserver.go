@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/mqnifestkelvin/djanGO/conf"
 	"github.com/mqnifestkelvin/djanGO/core/management"
+	"github.com/mqnifestkelvin/djanGO/core/middleware"
 	"github.com/mqnifestkelvin/djanGO/core/urls"
 )
 
@@ -34,8 +36,30 @@ func (c *runserverCommand) Execute(args []string) error {
 	mux := http.NewServeMux()
 	urls.Mount(mux, urls.Registered(), "")
 
+	// Build middleware chain from settings.MIDDLEWARE —
+	// mirrors Django's BaseHandler.load_middleware().
+	//
+	// Django:
+	//   for middleware_path in reversed(settings.MIDDLEWARE):
+	//       handler = middleware(handler)
+	//
+	// djanGO: same — collect registered middleware, wrap the mux.
+	var chain []middleware.Func
+	if conf.IsConfigured() {
+		for _, name := range conf.Global().Middleware {
+			if mw, ok := middleware.Lookup(name); ok {
+				chain = append(chain, mw)
+			}
+		}
+	}
+
+	var handler http.Handler = mux
+	if len(chain) > 0 {
+		handler = middleware.Chain(mux, chain...)
+	}
+
 	fmt.Printf("djanGO development server running at http://%s/\n", addr)
 	fmt.Println("Quit with CTRL-C.")
 
-	return http.ListenAndServe(addr, mux)
+	return http.ListenAndServe(addr, handler)
 }
