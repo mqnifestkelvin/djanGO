@@ -7,12 +7,101 @@ import (
 	"github.com/mqnifestkelvin/djanGO/client/orm"
 )
 
+// Permission mirrors Django's django.contrib.auth.models.Permission.
+//
+// Django:
+//
+//	class Permission(models.Model):
+//	    name = models.CharField(max_length=255)
+//	    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+//	    codename = models.CharField(max_length=100)
+//
+// Table: auth_permission
+// Unique together: (content_type, codename)
+type Permission struct {
+	models.Model
+	Id            int    `orm:"auto;pk"`
+	Name          string `orm:"size(255)"`
+	ContentTypeId int    `orm:"column(content_type_id)"`
+	Codename      string `orm:"size(100)"`
+}
+
+func (p *Permission) TableName() string { return "auth_permission" }
+
+// TableUnique mirrors Django's unique_together = [("content_type", "codename")] on Permission.
+func (p *Permission) TableUnique() [][]string {
+	return [][]string{{"content_type_id", "codename"}}
+}
+
+// Group mirrors Django's django.contrib.auth.models.Group.
+//
+// Django:
+//
+//	class Group(models.Model):
+//	    name = models.CharField(max_length=150, unique=True)
+//	    permissions = models.ManyToManyField(Permission)
+//
+// Table: auth_group
+type Group struct {
+	models.Model
+	Id   int    `orm:"auto;pk"`
+	Name string `orm:"size(150);unique"`
+}
+
+func (g *Group) TableName() string { return "auth_group" }
+
+// GroupPermission is the M2M join table for Group↔Permission.
+// Mirrors Django's auth_group_permissions table.
+type GroupPermission struct {
+	models.Model
+	Id           int `orm:"auto;pk"`
+	GroupId      int `orm:"column(group_id)"`
+	PermissionId int `orm:"column(permission_id)"`
+}
+
+func (gp *GroupPermission) TableName() string { return "auth_group_permissions" }
+
+func (gp *GroupPermission) TableUnique() [][]string {
+	return [][]string{{"group_id", "permission_id"}}
+}
+
+// UserGroup is the M2M join table for User↔Group.
+// Mirrors Django's auth_user_groups table.
+type UserGroup struct {
+	models.Model
+	Id      int `orm:"auto;pk"`
+	UserId  int `orm:"column(user_id)"`
+	GroupId int `orm:"column(group_id)"`
+}
+
+func (ug *UserGroup) TableName() string { return "auth_user_groups" }
+
+func (ug *UserGroup) TableUnique() [][]string {
+	return [][]string{{"user_id", "group_id"}}
+}
+
+// UserPermission is the M2M join table for User↔Permission (user_permissions field).
+// Mirrors Django's auth_user_user_permissions table.
+type UserPermission struct {
+	models.Model
+	Id           int `orm:"auto;pk"`
+	UserId       int `orm:"column(user_id)"`
+	PermissionId int `orm:"column(permission_id)"`
+}
+
+func (up *UserPermission) TableName() string { return "auth_user_user_permissions" }
+
+func (up *UserPermission) TableUnique() [][]string {
+	return [][]string{{"user_id", "permission_id"}}
+}
+
 // User mirrors Django's django.contrib.auth.models.User.
 //
 // Django fields:
 //   username, email, password, first_name, last_name
 //   is_staff, is_active, is_superuser
 //   last_login, date_joined
+//   groups (M2M → Group), user_permissions (M2M → Permission)
 //
 // Django:
 //
@@ -119,5 +208,12 @@ func CreateSuperuser(username, email, password string) (*User, error) {
 }
 
 func init() {
-	orm.RegisterModel(&User{})
+	orm.RegisterModel(
+		&Permission{},
+		&Group{},
+		&GroupPermission{},
+		&UserGroup{},
+		&UserPermission{},
+		&User{},
+	)
 }
