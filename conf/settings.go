@@ -16,11 +16,17 @@
 // This mirrors Django's django.conf.settings object.
 package conf
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/mqnifestkelvin/djanGO/client/orm"
+	_ "github.com/mattn/go-sqlite3"
+)
 
 // Settings holds project-level configuration — equivalent to Django's settings module.
 type Settings struct {
 	InstalledApps []string
+	Middleware     []string
 	Debug         bool
 	SecretKey     string
 	AllowedHosts  []string
@@ -36,14 +42,34 @@ var (
 	loaded bool
 )
 
-// Configure sets the global project settings.
+// Configure sets the global project settings and wires up the database —
+// mirrors Django reading DATABASES from settings and calling django.db.setup().
 // Call this from your settings package's init() function.
-// Equivalent to Django reading settings from DJANGO_SETTINGS_MODULE.
 func Configure(s Settings) {
 	mu.Lock()
 	defer mu.Unlock()
 	global = s
 	loaded = true
+
+	// Register each database alias with Beego's ORM —
+	// mirrors Django's DATABASES setting wiring into django.db.connections.
+	//
+	// Django:
+	//   DATABASES = {"default": {"ENGINE": "sqlite3", "NAME": "db.sqlite3"}}
+	//
+	// djanGO: same structure, we register each alias automatically.
+	for alias, db := range s.Databases {
+		engine := db["ENGINE"]
+		name := db["NAME"]
+		if engine == "" || name == "" {
+			continue
+		}
+		// Map Django ENGINE names to Beego driver names
+		driver := engineToDriver(engine)
+		dsn := buildDSN(driver, name, db)
+		// Ignore re-registration errors (init() may run more than once in tests)
+		_ = orm.RegisterDataBase(alias, driver, dsn)
+	}
 }
 
 // Global returns the current project settings.
@@ -64,6 +90,54 @@ func IsConfigured() bool {
 	mu.RLock()
 	defer mu.RUnlock()
 	return loaded
+}
+
+// engineToDriver maps Django ENGINE names to Beego/Go driver names.
+func engineToDriver(engine string) string {
+	switch engine {
+	case "sqlite3", "django.db.backends.sqlite3":
+		return "sqlite3"
+	case "mysql", "django.db.backends.mysql":
+		return "mysql"
+	case "postgres", "postgresql", "django.db.backends.postgresql":
+		return "postgres"
+	default:
+		return engine
+	}
+}
+
+// buildDSN constructs the driver DSN from a DATABASES entry.
+func buildDSN(driver, name string, db map[string]string) string {
+	switch driver {
+	case "sqlite3":
+		return name
+	case "mysql":
+		user := db["USER"]
+		pass := db["PASSWORD"]
+		host := db["HOST"]
+		if host == "" {
+			host = "127.0.0.1"
+		}
+		port := db["PORT"]
+		if port == "" {
+			port = "3306"
+		}
+		return user + ":" + pass + "@tcp(" + host + ":" + port + ")/" + name + "?charset=utf8mb4"
+	case "postgres":
+		user := db["USER"]
+		pass := db["PASSWORD"]
+		host := db["HOST"]
+		if host == "" {
+			host = "127.0.0.1"
+		}
+		port := db["PORT"]
+		if port == "" {
+			port = "5432"
+		}
+		return "user=" + user + " password=" + pass + " host=" + host + " port=" + port + " dbname=" + name + " sslmode=disable"
+	default:
+		return name
+	}
 }
 
 // IsInstalled returns true if the given app label is in InstalledApps.
