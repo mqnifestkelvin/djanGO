@@ -3,9 +3,10 @@ package commands
 import (
 	"flag"
 	"fmt"
+	"net/http"
 
 	"github.com/mqnifestkelvin/djanGO/core/management"
-	"github.com/mqnifestkelvin/djanGO/server/web"
+	"github.com/mqnifestkelvin/djanGO/core/urls"
 )
 
 func init() {
@@ -30,9 +31,11 @@ func (c *runserverCommand) Execute(args []string) error {
 		addr = args[0]
 	}
 
+	mux := http.NewServeMux()
+	urls.Mount(mux, urls.Registered(), "")
+
 	fmt.Printf("djanGO development server running at http://%s/\n", addr)
 	fmt.Println("Quit with CTRL-C.")
 
-	web.Run(addr)
-	return nil
+	return http.ListenAndServe(addr, mux)
 }
