@@ -21,8 +21,8 @@
 // Usage:
 // import(
 //
-//	_ "github.com/beego/beego/v2/client/cache/memcache"
-//	"github.com/beego/beego/v2/client/cache"
+//	_ "github.com/mqnifestkelvin/djanGO/client/cache/memcache"
+//	"github.com/mqnifestkelvin/djanGO/client/cache"
 //
 // )
 //
@@ -38,8 +38,8 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/beego/beego/v2/client/cache"
-	"github.com/beego/beego/v2/core/berror"
+	"github.com/mqnifestkelvin/djanGO/client/cache"
+	"github.com/mqnifestkelvin/djanGO/core/berror"
 )
 
 // Cache Memcache adapter.

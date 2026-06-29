@@ -21,8 +21,8 @@
 // Usage:
 // import(
 //
-//	_ "github.com/beego/beego/v2/client/cache/redis"
-//	"github.com/beego/beego/v2/client/cache"
+//	_ "github.com/mqnifestkelvin/djanGO/client/cache/redis"
+//	"github.com/mqnifestkelvin/djanGO/client/cache"
 //
 // )
 //
@@ -39,8 +39,8 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 
-	"github.com/beego/beego/v2/client/cache"
-	"github.com/beego/beego/v2/core/berror"
+	"github.com/mqnifestkelvin/djanGO/client/cache"
+	"github.com/mqnifestkelvin/djanGO/core/berror"
 )
 
 const (

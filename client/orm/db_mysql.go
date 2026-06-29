@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/beego/beego/v2/client/orm/internal/models"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/models"
 )
 
 // mysql operators.

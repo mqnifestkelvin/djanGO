@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/internal/models"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/models"
 )
 
 // Invocation represents an "Orm" invocation

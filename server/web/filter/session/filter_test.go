@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/beego/beego/v2/server/web"
-	webContext "github.com/beego/beego/v2/server/web/context"
-	"github.com/beego/beego/v2/server/web/session"
+	"github.com/mqnifestkelvin/djanGO/server/web"
+	webContext "github.com/mqnifestkelvin/djanGO/server/web/context"
+	"github.com/mqnifestkelvin/djanGO/server/web/session"
 )
 
 func testRequest(t *testing.T, handler *web.ControllerRegister, path string, method string, code int) {

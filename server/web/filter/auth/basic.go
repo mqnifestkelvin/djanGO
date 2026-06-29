@@ -16,8 +16,8 @@
 // Simple Usage:
 //
 //	import(
-//		"github.com/beego/beego/v2"
-//		"github.com/beego/beego/v2/server/web/filter/auth"
+//		"github.com/mqnifestkelvin/djanGO"
+//		"github.com/mqnifestkelvin/djanGO/server/web/filter/auth"
 //	)
 //
 //	func main(){
@@ -40,8 +40,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/beego/beego/v2/server/web"
-	"github.com/beego/beego/v2/server/web/context"
+	"github.com/mqnifestkelvin/djanGO/server/web"
+	"github.com/mqnifestkelvin/djanGO/server/web/context"
 )
 
 var defaultRealm = "Authorization Required"

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/beego/beego/v2/core/admin"
+	"github.com/mqnifestkelvin/djanGO/core/admin"
 )
 
 type listTaskCommand struct{}

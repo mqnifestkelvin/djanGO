@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/internal/logs"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/logs"
 )
 
 type Log = logs.Log

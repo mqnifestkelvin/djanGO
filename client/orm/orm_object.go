@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/beego/beego/v2/client/orm/internal/models"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/models"
 )
 
 // an insert queryer struct

@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beego/beego/v2/core/utils"
+	"github.com/mqnifestkelvin/djanGO/core/utils"
 )
 
 var (

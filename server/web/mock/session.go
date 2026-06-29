@@ -20,8 +20,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/beego/beego/v2/server/web"
-	"github.com/beego/beego/v2/server/web/session"
+	"github.com/mqnifestkelvin/djanGO/server/web"
+	"github.com/mqnifestkelvin/djanGO/server/web/session"
 )
 
 // NewSessionProvider create new SessionProvider

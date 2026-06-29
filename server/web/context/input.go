@@ -28,7 +28,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/beego/beego/v2/server/web/session"
+	"github.com/mqnifestkelvin/djanGO/server/web/session"
 )
 
 // Regexes for checking the accept headers

@@ -23,13 +23,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/internal/buffers"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/buffers"
 
-	"github.com/beego/beego/v2/client/orm/internal/utils"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/utils"
 
-	"github.com/beego/beego/v2/client/orm/internal/models"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/models"
 
-	"github.com/beego/beego/v2/client/orm/hints"
+	"github.com/mqnifestkelvin/djanGO/client/orm/hints"
 )
 
 // ErrMissPK missing pk error

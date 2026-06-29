@@ -26,7 +26,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/core/berror"
+	"github.com/mqnifestkelvin/djanGO/core/berror"
 )
 
 func TestWriteDoubleDeleteCache_Set(t *testing.T) {

@@ -26,8 +26,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web/context"
+	"github.com/mqnifestkelvin/djanGO/core/logs"
+	"github.com/mqnifestkelvin/djanGO/server/web/context"
 )
 
 // Substr returns the substr from start to length.

@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/core/utils"
+	"github.com/mqnifestkelvin/djanGO/core/utils"
 	"github.com/mitchellh/mapstructure"
 	"io"
 	"os"
@@ -26,8 +26,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/beego/beego/v2/core/config"
-	"github.com/beego/beego/v2/core/logs"
+	"github.com/mqnifestkelvin/djanGO/core/config"
+	"github.com/mqnifestkelvin/djanGO/core/logs"
 )
 
 // JSONConfig is a json config parser and implements Config interface.

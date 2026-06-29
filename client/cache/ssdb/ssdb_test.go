@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/client/cache"
-	"github.com/beego/beego/v2/core/berror"
+	"github.com/mqnifestkelvin/djanGO/client/cache"
+	"github.com/mqnifestkelvin/djanGO/core/berror"
 )
 
 func TestSsdbcacheCache(t *testing.T) {

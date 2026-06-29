@@ -24,8 +24,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web/context"
+	"github.com/mqnifestkelvin/djanGO/core/logs"
+	"github.com/mqnifestkelvin/djanGO/server/web/context"
 )
 
 type PrefixTestController struct {

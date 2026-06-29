@@ -18,8 +18,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/beego/beego/v2/client/httplib"
-	"github.com/beego/beego/v2/core/logs"
+	"github.com/mqnifestkelvin/djanGO/client/httplib"
+	"github.com/mqnifestkelvin/djanGO/core/logs"
 )
 
 const mockCtxKey = "beego-httplib-mock"

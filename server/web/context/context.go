@@ -15,7 +15,7 @@
 // Package context provide the context utils
 // Usage:
 //
-//	import "github.com/beego/beego/v2/server/web/context"
+//	import "github.com/mqnifestkelvin/djanGO/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 package context
@@ -40,8 +40,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v3"
 
-	"github.com/beego/beego/v2/core/utils"
-	"github.com/beego/beego/v2/server/web/session"
+	"github.com/mqnifestkelvin/djanGO/core/utils"
+	"github.com/mqnifestkelvin/djanGO/server/web/session"
 )
 
 // Commonly used mime-types

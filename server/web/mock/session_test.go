@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/server/web"
+	"github.com/mqnifestkelvin/djanGO/server/web"
 )
 
 func TestSessionProvider(t *testing.T) {

@@ -1,57 +1,113 @@
-# Beego [![Test](https://github.com/beego/beego/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/beego/beego/actions/workflows/test.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/beego/beego)](https://goreportcard.com/report/github.com/beego/beego) [![Go Reference](https://pkg.go.dev/badge/github.com/beego/beego/v2.svg)](https://pkg.go.dev/github.com/beego/beego/v2)
+# djanGO
 
-Beego is used for rapid development of enterprise application in Go, including RESTful APIs, web apps and backend services.
+Django's batteries-included philosophy, powered by Go's speed.
 
-It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct embedding.
+djanGO is a fork of [Beego](https://github.com/beego/beego) that brings Django's full developer experience to Go — Models, Views, URLs, admin panel, migrations, management commands, and more.
 
 ## Quick Start
-- [New Doc Website - unavailable](https://beego.gocn.vip)
-- [New Doc Website Backup @flycash](https://doc.meoying.com/en-US/beego/developing/)
-- [New Doc Website source code](https://github.com/beego/beego-doc)
-- [Old Doc - github](https://github.com/beego/beedoc)
-- [Example](https://github.com/beego/beego-example)
 
-> Kindly remind that sometimes the HTTPS certificate is expired, you may get some NOT SECURE warning
+### 1. Install djanGO-admin
 
-### Web Application
-
-#### Create `hello` directory, cd `hello` directory
-
-    mkdir hello
-    cd hello
-
-#### Init module
-
-    go mod init
-
-#### Download and install
-
-    go get github.com/beego/beego/v2@latest
-
-#### Create file `hello.go`
-
-```go
-package main
-
-import "github.com/beego/beego/v2/server/web"
-
-func main() {
-	web.Run()
-}
+```bash
+sudo go install github.com/beego/beego/v2/cmd/djang0@latest
+sudo mv $(go env GOPATH)/bin/djang0 /usr/local/bin/djanGO-admin
 ```
 
-#### Download required dependencies
+Or build from source:
 
-    go mod tidy
+```bash
+git clone https://github.com/mqnifestkelvin/beego
+cd beego
+sudo go build -o /usr/local/bin/djanGO-admin ./cmd/djang0/
+```
 
-#### Build and run
+### 2. Create a project
 
-    go build hello.go
-    ./hello
+```bash
+djanGO-admin startproject mysite
+cd mysite
+```
 
-#### Go to [http://localhost:8080](http://localhost:8080)
+This generates:
 
-Congratulations! You've just built your first **beego** app.
+```
+mysite/
+├── manage.go              ← management commands entry point
+├── go.mod
+├── urls.go                ← root URL configuration
+├── settings/
+│   ├── base.go            ← shared settings (AppName, SecretKey, DB, etc.)
+│   ├── development.go     ← dev overrides (Debug=true)
+│   └── production.go      ← production overrides
+├── apps/                  ← your djanGO apps live here
+├── templates/             ← HTML templates
+├── static/                ← CSS, JS, images
+└── media/                 ← user uploaded files
+```
+
+### 3. Create an app
+
+```bash
+djanGO-admin startapp blog
+```
+
+This generates:
+
+```
+blog/
+├── apps.go        ← app config + route registration
+├── models.go      ← data models (ORM)
+├── views.go       ← controllers / view handlers
+├── urls.go        ← app URL patterns
+├── admin.go       ← admin registrations
+├── forms.go       ← form definitions
+├── migrations/    ← database migrations
+├── templates/
+│   └── blog/      ← app-specific templates
+└── tests/
+    └── tests.go
+```
+
+### 4. Add the app to your project
+
+In `settings/base.go`, add the app name to `InstalledApps`:
+
+```go
+InstalledApps: []string{
+    "blog",
+},
+```
+
+Then import it in `manage.go`:
+
+```go
+_ "github.com/you/mysite/apps/blog"
+```
+
+### 5. Run the development server
+
+```bash
+go run manage.go runserver
+```
+
+Visit [http://127.0.0.1:8080](http://127.0.0.1:8080)
+
+---
+
+## How it mirrors Django
+
+| Django | djanGO |
+|---|---|
+| `django-admin startproject mysite` | `djanGO-admin startproject mysite` |
+| `python manage.py startapp blog` | `djanGO-admin startapp blog` |
+| `python manage.py runserver` | `go run manage.go runserver` |
+| `INSTALLED_APPS` in `settings.py` | `InstalledApps` in `settings/base.go` |
+| `models.py` | `models.go` |
+| `views.py` | `views.go` |
+| `urls.py` | `urls.go` |
+| `admin.py` | `admin.go` |
+| `forms.py` | `forms.go` |
+| `AppConfig` in `apps.py` | `apps.AppConfig` in `apps.go` |
 
 ## Features
 

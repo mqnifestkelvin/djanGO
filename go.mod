@@ -1,4 +1,4 @@
-module github.com/beego/beego/v2
+module github.com/mqnifestkelvin/djanGO
 
 go 1.24.2
 

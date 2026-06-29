@@ -21,7 +21,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/beego/beego/v2/client/orm"
+	"github.com/mqnifestkelvin/djanGO/client/orm"
 )
 
 func init() {

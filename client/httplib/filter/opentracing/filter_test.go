@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/client/httplib"
+	"github.com/mqnifestkelvin/djanGO/client/httplib"
 )
 
 func TestFilterChainBuilderFilterChain(t *testing.T) {

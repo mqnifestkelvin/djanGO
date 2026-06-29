@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/beego/beego/v2/client/orm/internal/models"
+	"github.com/mqnifestkelvin/djanGO/client/orm/internal/models"
 
-	"github.com/beego/beego/v2/client/orm/hints"
+	"github.com/mqnifestkelvin/djanGO/client/orm/hints"
 )
 
 // oracle operators.
