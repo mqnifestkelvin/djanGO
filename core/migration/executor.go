@@ -46,30 +46,64 @@ func (e *Executor) EnsureTable() error {
 	return e.recorder.EnsureTable()
 }
 
+// ANSI colour codes — mirrors Django's use of terminal colours in migrate output.
+const (
+	colorReset  = "\033[0m"
+	colorBoldCyan  = "\033[1;36m"
+	colorBoldGreen = "\033[1;32m"
+	colorBoldRed   = "\033[1;31m"
+)
+
+// PendingMigrations returns the list of migrations not yet recorded in django_migrations.
+// Used by the migrate command to count pending work before starting.
+func (e *Executor) PendingMigrations(migrations []*Migration) ([]*Migration, error) {
+	if err := e.recorder.EnsureTable(); err != nil {
+		return nil, fmt.Errorf("migrate: could not create django_migrations table: %w", err)
+	}
+	applied, err := e.recorder.Applied()
+	if err != nil {
+		return nil, err
+	}
+	var pending []*Migration
+	for _, m := range migrations {
+		if !applied[[2]string{m.App, m.Name}] {
+			pending = append(pending, m)
+		}
+	}
+	return pending, nil
+}
+
 // MigratePlan applies the given list of migrations in order, skipping those
 // already recorded in django_migrations.
 // Equivalent to Django's MigrationExecutor.migrate() / _migrate_all_forwards().
-func (e *Executor) MigratePlan(migrations []*Migration, fake bool) error {
-	if err := e.recorder.EnsureTable(); err != nil {
-		return fmt.Errorf("migrate: could not create django_migrations table: %w", err)
-	}
-
-	applied, err := e.recorder.Applied()
+//
+// printHeader controls whether "Running migrations:" is printed — pass false when
+// the caller already printed the header (e.g. when merging file + contrib output).
+//
+// Django output format:
+//
+//	Running migrations:
+//	  Applying blog.0001_initial... OK
+func (e *Executor) MigratePlan(migrations []*Migration, fake bool, printHeader bool) error {
+	pending, err := e.PendingMigrations(migrations)
 	if err != nil {
 		return err
 	}
 
-	for _, m := range migrations {
-		key := [2]string{m.App, m.Name}
-		if applied[key] {
-			continue
-		}
+	if len(pending) == 0 {
+		return nil
+	}
 
+	if printHeader {
+		fmt.Fprintf(e.out, "%sRunning migrations:%s\n", colorBoldCyan, colorReset)
+	}
+
+	for _, m := range pending {
 		fmt.Fprintf(e.out, "  Applying %s.%s...", m.App, m.Name)
 
 		if !fake {
 			if err := e.applyMigration(m); err != nil {
-				fmt.Fprintln(e.out, " FAILED")
+				fmt.Fprintf(e.out, " %sFAILED%s\n", colorBoldRed, colorReset)
 				return fmt.Errorf("migrate: error applying %s.%s: %w", m.App, m.Name, err)
 			}
 		}
@@ -77,7 +111,7 @@ func (e *Executor) MigratePlan(migrations []*Migration, fake bool) error {
 		if err := e.recorder.Record(m.App, m.Name); err != nil {
 			return fmt.Errorf("migrate: could not record %s.%s: %w", m.App, m.Name, err)
 		}
-		fmt.Fprintln(e.out, " OK")
+		fmt.Fprintf(e.out, " %sOK%s\n", colorBoldGreen, colorReset)
 	}
 
 	return nil
@@ -122,7 +156,7 @@ func (e *Executor) UnapplyPlan(migrations []*Migration, fake bool) error {
 
 		if !fake {
 			if err := e.unapplyMigration(m); err != nil {
-				fmt.Fprintln(e.out, " FAILED")
+				fmt.Fprintf(e.out, " %sFAILED%s\n", colorBoldRed, colorReset)
 				return fmt.Errorf("migrate: error unapplying %s.%s: %w", m.App, m.Name, err)
 			}
 		}
@@ -130,7 +164,7 @@ func (e *Executor) UnapplyPlan(migrations []*Migration, fake bool) error {
 		if err := e.recorder.Unrecord(m.App, m.Name); err != nil {
 			return fmt.Errorf("migrate: could not unrecord %s.%s: %w", m.App, m.Name, err)
 		}
-		fmt.Fprintln(e.out, " OK")
+		fmt.Fprintf(e.out, " %sOK%s\n", colorBoldGreen, colorReset)
 	}
 
 	return nil
