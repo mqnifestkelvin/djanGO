@@ -63,3 +63,90 @@ func BootStrapWithAlias(alias string) {
 func ResetModelCache() {
 	defaultModelCache.Clean()
 }
+
+// ModelFieldInfo is a public representation of a registered model field,
+// used by core/migration for schema introspection (makemigrations).
+type ModelFieldInfo struct {
+	Name       string
+	ColumnName string
+	FieldType  int // matches imodels.Type* constants, re-exported below as ORM* consts
+	Size       int
+	Null       bool
+	Unique     bool
+	PrimaryKey bool
+	Auto       bool
+	Index      bool
+	Digits     int
+	Decimals   int
+	RelTable   string
+	Default    string // string representation of the default value, empty = none
+}
+
+// ModelInfo is a public representation of a registered model,
+// used by core/migration for schema introspection (makemigrations).
+type ModelInfo struct {
+	Name     string
+	FullName string // e.g. "blog.Post"
+	Table    string
+	Fields   []ModelFieldInfo
+}
+
+// Field type constants re-exported so core/migration can compare without
+// importing the internal package.
+const (
+	ORMTypeBooleanField              = imodels.TypeBooleanField
+	ORMTypeVarCharField              = imodels.TypeVarCharField
+	ORMTypeCharField                 = imodels.TypeCharField
+	ORMTypeTextField                 = imodels.TypeTextField
+	ORMTypeTimeField                 = imodels.TypeTimeField
+	ORMTypeDateField                 = imodels.TypeDateField
+	ORMTypeDateTimeField             = imodels.TypeDateTimeField
+	ORMTypeSmallIntegerField         = imodels.TypeSmallIntegerField
+	ORMTypeIntegerField              = imodels.TypeIntegerField
+	ORMTypeBigIntegerField           = imodels.TypeBigIntegerField
+	ORMTypePositiveSmallIntegerField = imodels.TypePositiveSmallIntegerField
+	ORMTypePositiveIntegerField      = imodels.TypePositiveIntegerField
+	ORMTypePositiveBigIntegerField   = imodels.TypePositiveBigIntegerField
+	ORMTypeFloatField                = imodels.TypeFloatField
+	ORMTypeDecimalField              = imodels.TypeDecimalField
+	ORMTypeJSONField                 = imodels.TypeJSONField
+	ORMTypeJsonbField                = imodels.TypeJsonbField
+	ORMRelForeignKey                 = imodels.RelForeignKey
+	ORMRelOneToOne                   = imodels.RelOneToOne
+	ORMRelManyToMany                 = imodels.RelManyToMany
+)
+
+// GetRegisteredModels returns all registered models as public ModelInfo structs
+// for inspection by the migration system. Call after RegisterModel().
+func GetRegisteredModels() []ModelInfo {
+	var out []ModelInfo
+	for _, mi := range defaultModelCache.AllOrdered() {
+		info := ModelInfo{
+			Name:     mi.Name,
+			FullName: mi.FullName,
+			Table:    mi.Table,
+		}
+		for _, fi := range mi.Fields.FieldsDB {
+			mfi := ModelFieldInfo{
+				Name:       fi.Name,
+				ColumnName: fi.Column,
+				FieldType:  fi.FieldType,
+				Size:       fi.Size,
+				Null:       fi.Null,
+				Unique:     fi.Unique,
+				PrimaryKey: fi.Pk,
+				Auto:       fi.Auto,
+				Index:      fi.Index,
+				Digits:     fi.Digits,
+				Decimals:   fi.Decimals,
+				RelTable:   fi.RelTable,
+			}
+			if fi.Initial.Exist() {
+				mfi.Default = "'" + fi.Initial.String() + "'"
+			}
+			info.Fields = append(info.Fields, mfi)
+		}
+		out = append(out, info)
+	}
+	return out
+}
