@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/mqnifestkelvin/djanGO/core/utils"
 	"github.com/mitchellh/mapstructure"
 	"io"
@@ -516,10 +515,7 @@ func (c *IniConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...
 func init() {
 	Register("ini", &IniConfig{})
 
-	err := InitGlobalInstance("ini", "conf/app.conf")
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "init global config instance failed. If you do not use this, just ignore it. ", err)
-	}
+	_ = InitGlobalInstance("ini", "conf/app.conf")
 }
 
 // Ignore this error
