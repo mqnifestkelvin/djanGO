@@ -34,6 +34,25 @@ type Settings struct {
 	StaticURL     string
 	TimeZone      string
 	LanguageCode  string
+
+	// CORS settings — mirrors django-cors-headers configuration.
+	// Django: CORS_ALLOW_ALL_ORIGINS, CORS_ALLOWED_ORIGINS, etc.
+	//
+	// Usage:
+	//   CorsAllowAllOrigins: true                          // CORS_ALLOW_ALL_ORIGINS
+	//   CorsAllowedOrigins: []string{"https://foo.com"}   // CORS_ALLOWED_ORIGINS
+	//   CorsAllowCredentials: true                        // CORS_ALLOW_CREDENTIALS
+	//   CorsAllowedOriginRegexes: []string{`^https://.*\.example\.com$`}
+	CorsAllowAllOrigins      bool
+	CorsAllowedOrigins       []string
+	CorsAllowedOriginRegexes []string
+	CorsAllowCredentials     bool
+	CorsAllowPrivateNetwork  bool
+	CorsAllowHeaders         []string
+	CorsAllowMethods         []string
+	CorsExposeHeaders        []string
+	CorsPreflightMaxAge      int
+	CorsURLsRegex            string
 }
 
 var (
