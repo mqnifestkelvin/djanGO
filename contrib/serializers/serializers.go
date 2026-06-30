@@ -84,28 +84,111 @@ type SerializerMeta struct {
 // Django:
 //
 //	class MySerializer(serializers.Serializer):
-//	    title = serializers.CharField()
+//	    title = serializers.CharField(max_length=200)
 //	    email = serializers.EmailField()
+//
+//	s = MySerializer(data=request.data)
+//	if s.is_valid():
+//	    s.save()
 type Serializer struct {
 	Errors      map[string]string
+	Fields      map[string]Field // declared fields — run during IsValid()
 	initialData map[string]interface{}
 	validated   map[string]interface{}
+	createFn    func(data map[string]interface{}) (interface{}, error)
+	updateFn    func(instance interface{}, data map[string]interface{}) (interface{}, error)
+	instance    interface{}
 }
 
-// IsValid validates incoming data — mirrors DRF's serializer.is_valid().
+// DeclareFields sets the field definitions used by IsValid() —
+// call this in your serializer constructor to register validators.
+//
+// Django equivalent: declaring fields as class attributes on the serializer.
+func (s *Serializer) DeclareFields(fields map[string]Field) {
+	s.Fields = fields
+}
+
+// IsValid validates incoming data against declared fields —
+// mirrors DRF's serializer.is_valid().
 //
 // Django:
 //
 //	s = MySerializer(data=request.data)
 //	if s.is_valid():
 //	    s.save()
+//	else:
+//	    return Response(s.errors, status=400)
 func (s *Serializer) IsValid() bool {
-	return len(s.Errors) == 0
+	if s.Errors == nil {
+		s.Errors = map[string]string{}
+	}
+	// If no field declarations, fall back to checking parse success only.
+	if len(s.Fields) == 0 {
+		return len(s.Errors) == 0
+	}
+	for name, field := range s.Fields {
+		v, exists := s.initialData[name]
+		if !exists || v == nil {
+			if field.Required {
+				s.Errors[name] = "this field is required"
+			}
+			continue
+		}
+		if field.validator != nil {
+			if err := field.validator(v); err != nil {
+				s.Errors[name] = err.Error()
+			}
+		}
+	}
+	if len(s.Errors) == 0 {
+		s.validated = s.initialData
+		return true
+	}
+	return false
 }
 
 // ValidatedData returns cleaned data after is_valid() — mirrors s.validated_data.
 func (s *Serializer) ValidatedData() map[string]interface{} {
 	return s.validated
+}
+
+// Save calls create() or update() depending on whether an instance was passed —
+// mirrors DRF's serializer.save().
+//
+// Django:
+//
+//	s = PostSerializer(data=request.data)
+//	if s.is_valid():
+//	    post = s.save()           # calls create()
+//
+//	s = PostSerializer(post, data=request.data)
+//	if s.is_valid():
+//	    post = s.save()           # calls update()
+func (s *Serializer) Save() (interface{}, error) {
+	if s.instance != nil && s.updateFn != nil {
+		return s.updateFn(s.instance, s.validated)
+	}
+	if s.createFn != nil {
+		return s.createFn(s.validated)
+	}
+	return nil, nil
+}
+
+// SetCreate registers the create() hook — called by Save() when no instance.
+// mirrors DRF's def create(self, validated_data).
+func (s *Serializer) SetCreate(fn func(data map[string]interface{}) (interface{}, error)) {
+	s.createFn = fn
+}
+
+// SetUpdate registers the update() hook — called by Save() when instance is set.
+// mirrors DRF's def update(self, instance, validated_data).
+func (s *Serializer) SetUpdate(fn func(instance interface{}, data map[string]interface{}) (interface{}, error)) {
+	s.updateFn = fn
+}
+
+// SetInstance sets the instance for update operations.
+func (s *Serializer) SetInstance(instance interface{}) {
+	s.instance = instance
 }
 
 // ModelSerializer[T] auto-serializes any struct based on its exported fields.
@@ -172,7 +255,7 @@ func (s *ManySerializer[T]) Data() ([]map[string]interface{}, error) {
 	return result, nil
 }
 
-// Bind deserializes incoming JSON request body into a map and validates it —
+// Bind deserializes the incoming JSON request body into a Serializer for validation —
 // mirrors DRF's Serializer(data=request.data).
 //
 // Django:
@@ -180,13 +263,31 @@ func (s *ManySerializer[T]) Data() ([]map[string]interface{}, error) {
 //	s = PostSerializer(data=request.data)
 //	if s.is_valid():
 //	    post = s.save()
+//
+// After Bind(), call DeclareFields() then IsValid().
 func Bind(r *http.Request) (*Serializer, error) {
 	s := &Serializer{Errors: map[string]string{}}
 	if err := json.NewDecoder(r.Body).Decode(&s.initialData); err != nil {
 		s.Errors["non_field_errors"] = "Invalid JSON: " + err.Error()
 		return s, nil
 	}
-	s.validated = s.initialData
+	return s, nil
+}
+
+// BindWithInstance deserializes request body and attaches an existing instance
+// for update — mirrors DRF's Serializer(instance, data=request.data).
+//
+// Django:
+//
+//	s = PostSerializer(post, data=request.data)
+//	if s.is_valid():
+//	    post = s.save()   # calls update()
+func BindWithInstance(r *http.Request, instance interface{}) (*Serializer, error) {
+	s, err := Bind(r)
+	if err != nil {
+		return s, err
+	}
+	s.instance = instance
 	return s, nil
 }
 
