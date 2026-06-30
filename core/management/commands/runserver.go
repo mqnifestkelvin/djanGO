@@ -6,8 +6,10 @@ import (
 	"net/http"
 
 	"github.com/mqnifestkelvin/djanGO/conf"
+	"github.com/mqnifestkelvin/djanGO/contrib/staticfiles"
 	"github.com/mqnifestkelvin/djanGO/core/management"
 	"github.com/mqnifestkelvin/djanGO/core/middleware"
+	"github.com/mqnifestkelvin/djanGO/core/signals"
 	"github.com/mqnifestkelvin/djanGO/core/urls"
 )
 
@@ -36,6 +38,20 @@ func (c *runserverCommand) Execute(args []string) error {
 	mux := http.NewServeMux()
 	urls.Mount(mux, urls.Registered(), "")
 
+	// In DEBUG mode, serve static files directly from app static/ directories —
+	// mirrors Django's staticfiles runserver extension which auto-wires
+	// django.contrib.staticfiles.views.serve at STATIC_URL.
+	if conf.IsConfigured() {
+		s := conf.Global()
+		if s.Debug && s.StaticURL != "" {
+			staticURL := s.StaticURL
+			if staticURL[len(staticURL)-1] != '/' {
+				staticURL += "/"
+			}
+			mux.Handle(staticURL, staticfiles.Handler())
+		}
+	}
+
 	// Build middleware chain from settings.MIDDLEWARE —
 	// mirrors Django's BaseHandler.load_middleware().
 	//
@@ -58,8 +74,22 @@ func (c *runserverCommand) Execute(args []string) error {
 		handler = middleware.Chain(mux, chain...)
 	}
 
+	// Wrap with request_started / request_finished signals —
+	// mirrors Django's BaseHandler firing core.signals.request_started / request_finished.
+	handler = signalHandler(handler)
+
 	fmt.Printf("djanGO development server running at http://%s/\n", addr)
 	fmt.Println("Quit with CTRL-C.")
 
 	return http.ListenAndServe(addr, handler)
+}
+
+// signalHandler wraps the handler to fire request_started and request_finished
+// signals around every request — mirrors Django's BaseHandler.__call__.
+func signalHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		signals.RequestStarted.Send("server", signals.Kwargs{"request": r})
+		next.ServeHTTP(w, r)
+		signals.RequestFinished.Send("server", signals.Kwargs{"request": r})
+	})
 }
