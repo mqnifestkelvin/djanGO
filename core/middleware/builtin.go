@@ -53,26 +53,20 @@ func CommonMiddleware(next http.Handler) http.Handler {
 }
 
 // CSRFMiddleware mirrors Django's CsrfViewMiddleware.
-// In development (non-POST safe methods pass through).
-// Full CSRF token validation is wired in when sessions are active.
+// Validates the CSRF token on unsafe methods (POST, PUT, PATCH, DELETE).
+// Safe methods (GET, HEAD, OPTIONS, TRACE) pass through and receive the cookie.
 //
 // Django:
 //
 //	class CsrfViewMiddleware:
 //	    def process_view(self, request, callback, ...):
 //	        if request.method in ("GET", "HEAD", "OPTIONS", "TRACE"):
-//	            return None  # safe methods pass through
-//	        # validate csrf token ...
+//	            return None
+//	        # compare cookie secret vs X-CSRFToken header / csrfmiddlewaretoken form field
+//
+// Use CsrfExempt(view) to skip validation on a specific view (mirrors @csrf_exempt).
 func CSRFMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Safe methods always pass through — mirrors Django's CSRF exempt for GET/HEAD
-		safeMethods := map[string]bool{"GET": true, "HEAD": true, "OPTIONS": true, "TRACE": true}
-		if !safeMethods[r.Method] {
-			// TODO: validate CSRF token from cookie vs form field
-			// For now, pass through (mirrors Django's @csrf_exempt behaviour)
-		}
-		next.ServeHTTP(w, r)
-	})
+	return csrfMiddleware(next)
 }
 
 // SessionMiddleware mirrors Django's SessionMiddleware.
