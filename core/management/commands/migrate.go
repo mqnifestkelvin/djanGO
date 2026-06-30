@@ -13,6 +13,7 @@ import (
 	"github.com/mqnifestkelvin/djanGO/client/orm"
 	"github.com/mqnifestkelvin/djanGO/core/management"
 	"github.com/mqnifestkelvin/djanGO/core/migration"
+	"github.com/mqnifestkelvin/djanGO/core/signals"
 )
 
 // ANSI colours — match Django's migrate output exactly.
@@ -114,7 +115,7 @@ func (c *migrateCmd) Execute(args []string) error {
 		appSet[m.App] = struct{}{}
 	}
 	// Include contrib apps that are synced via RunSyncdb.
-	for _, app := range []string{"auth", "contenttypes", "sessions"} {
+	for _, app := range []string{"admin", "auth", "contenttypes", "sessions"} {
 		appSet[app] = struct{}{}
 	}
 	appList := make([]string, 0, len(appSet))
@@ -181,6 +182,10 @@ func (c *migrateCmd) Execute(args []string) error {
 		return err
 	}
 
+	// Fire post_migrate signal — allows app code to hook into the migrate lifecycle.
+	// Django: post_migrate.send(sender=app_config, verbosity=options["verbosity"])
+	signals.PostMigrate.Send("migrate", signals.Kwargs{"verbosity": 1})
+
 	return nil
 }
 
@@ -193,7 +198,7 @@ type contribMig struct {
 // allContribMigrations is the ordered list of contrib tables djanGO creates via RunSyncdb,
 // presented as Django-style named migrations.
 // Order mirrors Django's dependency graph:
-//   contenttypes → auth (permission needs content_type) → sessions
+//   contenttypes → auth → admin → sessions
 var allContribMigrations = []contribMig{
 	{"contenttypes", "0001_initial", "django_content_type"},
 	{"auth", "0001_initial", "auth_permission"},
@@ -202,6 +207,7 @@ var allContribMigrations = []contribMig{
 	{"auth", "0004_initial", "auth_user"},
 	{"auth", "0005_initial", "auth_user_groups"},
 	{"auth", "0006_initial", "auth_user_user_permissions"},
+	{"admin", "0001_initial", "django_admin_log"},
 	{"sessions", "0001_initial", "django_session"},
 }
 
@@ -256,6 +262,7 @@ var verboseNames = map[string]string{
 	"group":       "group",
 	"user":        "user",
 	"session":     "session",
+	"post":        "post",
 }
 
 // modelVerboseName returns the human-readable name for a model —
