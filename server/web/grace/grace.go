@@ -92,8 +92,12 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&isChild, "graceful", false, "listen on open fd (after forking)")
-	flag.StringVar(&socketOrder, "socketorder", "", "previous initialization order - used when more than one listener was started")
+	if flag.Lookup("graceful") == nil {
+		flag.BoolVar(&isChild, "graceful", false, "listen on open fd (after forking)")
+	}
+	if flag.Lookup("socketorder") == nil {
+		flag.StringVar(&socketOrder, "socketorder", "", "previous initialization order - used when more than one listener was started")
+	}
 
 	regLock = &sync.Mutex{}
 	runningServers = make(map[string]*Server)
