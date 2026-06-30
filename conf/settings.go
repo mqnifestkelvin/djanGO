@@ -31,7 +31,9 @@ type Settings struct {
 	SecretKey     string
 	AllowedHosts  []string
 	Databases     map[string]map[string]string
-	StaticURL     string
+	StaticURL     string   // URL prefix for static files, e.g. "/static/"  (STATIC_URL)
+	StaticRoot    string   // Absolute path where collectstatic copies files  (STATIC_ROOT)
+	StaticDirs    []string // Additional directories to search for static files (STATICFILES_DIRS)
 	TimeZone      string
 	LanguageCode  string
 
